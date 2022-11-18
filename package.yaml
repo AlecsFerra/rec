@@ -4,7 +4,7 @@ github:              "alecsferra/rec"
 license:             BSD3
 author:              "Alessio Ferrarini"
 maintainer:          "example@example.com"
-copyright:           "2022 Alessio Ferrrarini"
+copyright:           "2022 Alessio Ferrarini"
 
 extra-source-files:
 - README.md
