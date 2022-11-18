@@ -1,0 +1,41 @@
+name:                rec
+version:             0.1.0.0
+github:              "alecsferra/rec"
+license:             BSD3
+author:              "Alessio Ferrarini"
+maintainer:          "example@example.com"
+copyright:           "2022 Alessio Ferrrarini"
+
+extra-source-files:
+- README.md
+
+description:         Please see the README on GitHub at <https://github.com/alecsferra/rec#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+- -Wno-name-shadowing
+
+library:
+  source-dirs: src
+
+executables:
+  rec-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - rec

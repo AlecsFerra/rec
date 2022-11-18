@@ -1,0 +1,15 @@
+sign(x) = if x then 0 else signrec(x, x)
+
+signrec(pos, neg) = if pos then
+   1
+   else if neg
+           then -1
+           else signrec(pos - 1, neg + 1)
+
+fact(x) = if lte(x, 1) then 1 else x * fact(x - 1)
+
+lte(x, y) = if sign(x - y) - 1 then 1 else 0
+
+const(x, y) = x
+
+const(0, fact(1500))
