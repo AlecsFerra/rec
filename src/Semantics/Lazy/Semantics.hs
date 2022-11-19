@@ -11,11 +11,15 @@ import Semantics.FixPoint (fix)
 
 type FSemantic = Env -> Maybe Integer
 
-data Functional = Functional [VariableIdentifier] Expression FSemantic
+data Function = Function [VariableIdentifier] Expression FSemantic
 
-type FEnv = Environment FunctionIdentifier Functional
+type FEnv = Environment FunctionIdentifier Function
 
 type Env = Environment VariableIdentifier (Maybe Integer)
+
+baseEnv :: Environment k v
+baseEnv =
+    withDefault $ error "Precondition violated the program referenced an undefined identifier"
 
 makeEnv :: Env -> [VariableIdentifier] -> [Maybe Integer] -> Env
 makeEnv base = foldl' (uncurry . insert) base .:. zip
@@ -33,22 +37,21 @@ semantics e fenv env = run e
       semantics' guard >>= (bool (semantics' thenBranch) (semantics' elseBranch) . (/= 0))
     run (Application fi args) = do
       let args' = fmap semantics' args
-      let (Functional argNames _ functional) = lookup fenv fi
-      let env' = makeEnv env argNames args'
+      let (Function argNames _ functional) = lookup fenv fi
+      let env' = makeEnv baseEnv argNames args'
       functional env'
 
 makeBottom :: [FunctionDefinition] -> FEnv
-makeBottom = foldl' (uncurry . insert) defaultFenv . fmap makeEmpty
+makeBottom = foldl' (uncurry . insert) baseEnv . fmap makeEmpty
   where
-    makeEmpty (FunctionDefinition id args body) = (id, Functional args body (const Nothing))
-    defaultFenv = withDefault $ error "Precondition violated the program called an undefined function"
+    makeEmpty (FunctionDefinition id args body) = (id, Function args body (const Nothing))
 
 step :: FEnv -> FEnv
 step fenv = fmap step fenv
   where
-    step (Functional args body _) = Functional args body (semantics body fenv)
+    step (Function args body _) = Function args body (semantics body fenv)
 
 eval :: Program -> Integer
 eval (Program definitions mainExpression) = fix (makeBottom definitions) step eval'
   where
-    eval' f = semantics mainExpression f $ withDefault $ error "Precondition violated the program called an undefined variable"
+    eval' f = semantics mainExpression f baseEnv

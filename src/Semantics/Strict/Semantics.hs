@@ -18,6 +18,10 @@ type FEnv = Environment FunctionIdentifier Functional
 
 type Env = Environment VariableIdentifier Integer
 
+baseEnv :: Environment k v
+baseEnv =
+    withDefault $ error "Precondition violated the program referenced an undefined identifier"
+
 makeEnv :: Env -> [VariableIdentifier] -> [Integer] -> Env
 makeEnv base = foldl' (uncurry . insert) base .:. zip
 
@@ -35,14 +39,13 @@ semantics e fenv env = run e
     run (Application fi args) = do
       args <- forM args semantics'
       let (Functional argNames _ functional) = lookup fenv fi
-      let env' = makeEnv env argNames args
+      let env' = makeEnv baseEnv argNames args
       functional env'
 
 makeBottom :: [FunctionDefinition] -> FEnv
-makeBottom = foldl' (uncurry . insert) defaultFenv . fmap makeEmpty
+makeBottom = foldl' (uncurry . insert) baseEnv . fmap makeEmpty
   where
     makeEmpty (FunctionDefinition id args body) = (id, Functional args body (const Nothing))
-    defaultFenv = withDefault $ error "Precondition violated the program called an undefined function"
 
 step :: FEnv -> FEnv
 step fenv = fmap step fenv
@@ -52,4 +55,4 @@ step fenv = fmap step fenv
 eval :: Program -> Integer
 eval (Program definitions mainExpression) = fix (makeBottom definitions) step eval'
   where
-    eval' f = semantics mainExpression f $ withDefault $ error "Precondition violated the program called an undefined variable"
+    eval' f = semantics mainExpression f baseEnv
