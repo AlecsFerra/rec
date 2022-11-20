@@ -20,7 +20,7 @@ Run a program using lazy evaluation:
 stack run -- path/to/src -l
 ```
 
-You can force the strict evaluation with -s but it's already the default.
+You can force the strict evaluation with the flag `-s` but it's already the default.
 
 ## Dependencies
 
