@@ -1,58 +1,16 @@
 module Semantics.Strict.Semantics (eval) where
 
-import Control.Applicative (Applicative (liftA2))
-import Control.Monad (forM)
-import Data.Bool (bool)
-import Data.Foldable (Foldable (foldl'))
-import Semantics.Environment (Environment (lookup), insert, withDefault)
-import Semantics.FixPoint (fix)
-import Syntax.Syntax (Expression (..), FunctionDefinition (..), FunctionIdentifier (..), Program (..), VariableIdentifier (..))
-import Util ((.:.))
-import Prelude hiding (lookup)
-
-type FSemantic = Env -> Maybe Integer
-
-data Functional = Functional [VariableIdentifier] Expression FSemantic
-
-type FEnv = Environment FunctionIdentifier Functional
-
-type Env = Environment VariableIdentifier Integer
-
-baseEnv :: Environment k v
-baseEnv =
-    withDefault $ error "Precondition violated the program referenced an undefined identifier"
-
-makeEnv :: Env -> [VariableIdentifier] -> [Integer] -> Env
-makeEnv base = foldl' (uncurry . insert) base .:. zip
-
-semantics :: Expression -> FEnv -> Env -> Maybe Integer
-semantics e fenv env = run e
-  where
-    semantics' e = semantics e fenv env
-
-    run (Variable id) = Just $ lookup env id
-    run (Literal n) = Just n
-    run (Addition l r) = liftA2 (+) (semantics' l) (semantics' r)
-    run (Multiplication l r) = liftA2 (*) (semantics' l) (semantics' r)
-    run (Conditional guard thenBranch elseBranch) =
-      semantics' guard >>= (bool (semantics' thenBranch) (semantics' elseBranch) . (/= 0))
-    run (Application fi args) = do
-      args <- forM args semantics'
-      let (Functional argNames _ functional) = lookup fenv fi
-      let env' = makeEnv baseEnv argNames args
-      functional env'
-
-makeBottom :: [FunctionDefinition] -> FEnv
-makeBottom = foldl' (uncurry . insert) baseEnv . fmap makeEmpty
-  where
-    makeEmpty (FunctionDefinition id args body) = (id, Functional args body (const Nothing))
-
-step :: FEnv -> FEnv
-step fenv = fmap step fenv
-  where
-    step (Functional args body _) = Functional args body (semantics body fenv)
+import Data.Functor.Identity (Identity (Identity, runIdentity), runIdentity)
+import Semantics.Semantics (EvalStrategy (..))
+import qualified Semantics.Semantics as S (eval)
+import Syntax.Syntax (Program)
 
 eval :: Program -> Integer
-eval (Program definitions mainExpression) = fix (makeBottom definitions) step eval'
-  where
-    eval' f = semantics mainExpression f baseEnv
+eval = S.eval strategy
+
+strategy :: EvalStrategy Identity
+strategy =
+  EvalStrategy
+    { maybeM = Just . runIdentity,
+      arguments = fmap (fmap Identity) . sequence
+    }
