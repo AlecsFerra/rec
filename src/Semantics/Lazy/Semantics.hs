@@ -10,6 +10,6 @@ eval = S.eval strategy
 strategy :: EvalStrategy Maybe
 strategy =
   EvalStrategy
-    { maybeM = id,
-      arguments = Just
+    { toMaybe = id,
+      evalArgs = Just
     }

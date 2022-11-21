@@ -21,8 +21,8 @@ type FEnv m = Environment FunctionIdentifier (Function m)
 type Env m = Environment VariableIdentifier (m Integer)
 
 data EvalStrategy m = EvalStrategy
-  { maybeM :: forall a. m a -> Maybe a,
-    arguments :: [Maybe Integer] -> Maybe [m Integer]
+  { toMaybe :: forall a. m a -> Maybe a,
+    evalArgs :: [Maybe Integer] -> Maybe [m Integer]
   }
 
 eval :: forall m. EvalStrategy m -> Program -> Integer
@@ -48,14 +48,14 @@ eval strategy (Program defs main) = fix (makeBottom defs) step (\fenv -> semanti
     semantics :: Expression -> FEnv m -> Env m -> Maybe Integer
     semantics e fenv env = semantics' e
       where
-        semantics' (Variable id) = maybeM strategy $ lookup env id
+        semantics' (Variable id) = toMaybe strategy $ lookup env id
         semantics' (Literal n) = Just n
         semantics' (Addition l r) = liftA2 (+) (semantics' l) (semantics' r)
         semantics' (Multiplication l r) = liftA2 (*) (semantics' l) (semantics' r)
         semantics' (Conditional guard thenClause elseClause) =
           semantics' guard >>= (bool (semantics' thenClause) (semantics' elseClause) . (/= 0))
         semantics' (Application id args) = do
-          args <- arguments strategy $ fmap semantics' args
+          args <- evalArgs strategy $ fmap semantics' args
           let (Function argNames _ functional) = lookup fenv id
           let env' = makeEnv baseEnv argNames args
           functional env'

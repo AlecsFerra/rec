@@ -11,6 +11,6 @@ eval = S.eval strategy
 strategy :: EvalStrategy Identity
 strategy =
   EvalStrategy
-    { maybeM = Just . runIdentity,
-      arguments = fmap (fmap Identity) . sequence
+    { toMaybe = Just . runIdentity,
+      evalArgs = fmap (fmap Identity) . sequence
     }
