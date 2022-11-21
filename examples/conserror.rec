@@ -1,0 +1,5 @@
+alpha = 11
+
+f(x) = alpha
+
+f(10)

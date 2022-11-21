@@ -1,0 +1,6 @@
+
+f(x) = x + alpha
+
+alpha = 11
+
+f(1)

@@ -3,7 +3,7 @@ module Semantics.Check (checkProgram, CheckError (..)) where
 import Control.Monad (foldM)
 import Data.Foldable (forM_)
 import Semantics.Environment (Environment, insert, lookup, withDefault)
-import Syntax.Syntax (Expression (..), FunctionDefinition (FunctionDefinition), FunctionIdentifier (..), Program (Program), VariableIdentifier (..))
+import Syntax.Syntax (ConstantDefinition (..), Expression (..), FunctionDefinition (FunctionDefinition), FunctionIdentifier (..), Program (Program), VariableIdentifier (..))
 import Util (guard', note)
 import Prelude hiding (lookup)
 
@@ -19,20 +19,22 @@ data CheckError
   | WrongArity FunctionIdentifier Arity Arity
   | UnknownVariable VariableIdentifier
   | DuplicateParameter VariableIdentifier
+  | DuplicateConstant VariableIdentifier
   deriving (Show)
 
 checkProgram :: Program -> Either CheckError ()
-checkProgram (Program definitions main) = do
+checkProgram (Program definitions constants main) = do
   fenv <- foldM buildFenv (withDefault Nothing) definitions
-  forM_ definitions (checkFunction fenv)
-  checkExpression fenv (withDefault False) main
+  env <- foldM buildEnv (withDefault False) constants
+  forM_ definitions (checkFunction fenv env)
+  checkExpression fenv env main
 
-checkFunction :: FEnv -> FunctionDefinition -> Either CheckError ()
-checkFunction fenv (FunctionDefinition _ args body) = do
+checkFunction :: FEnv -> Env -> FunctionDefinition -> Either CheckError ()
+checkFunction fenv env (FunctionDefinition _ args body) = do
   env <- checkArgs args
   checkExpression fenv env body
   where
-    checkArgs = foldM comb (withDefault False)
+    checkArgs = foldM comb env
     comb env id | lookup env id = Left $ DuplicateParameter id
     comb env id = Right $ insert env id True
 
@@ -44,6 +46,14 @@ buildFenv fenv (FunctionDefinition id args _) = do
     unusedName fenv id = case lookup fenv id of
       Nothing -> pure ()
       Just _ -> Left $ DuplicateFunctionIdentifier id
+
+buildEnv :: Env -> ConstantDefinition -> Either CheckError Env
+buildEnv env (ConstantDefinition id _) = do
+  unusedName env id
+  pure $ insert env id True
+  where
+    unusedName env id | lookup env id = Left $ DuplicateConstant id
+    unusedName _ _ = pure ()
 
 checkExpression :: FEnv -> Env -> Expression -> Either CheckError ()
 checkExpression fenv env = checkExpression'

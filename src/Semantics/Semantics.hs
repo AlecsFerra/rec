@@ -8,7 +8,7 @@ import Data.Foldable (Foldable (..))
 import GHC.Base (Applicative (..))
 import Semantics.Environment (Environment, insert, lookup, withDefault)
 import Semantics.FixPoint (fix)
-import Syntax.Syntax (Expression (..), FunctionDefinition (..), FunctionIdentifier (..), Program (..), VariableIdentifier (..))
+import Syntax.Syntax (Expression (..), FunctionDefinition (..), FunctionIdentifier (..), Program (..), VariableIdentifier (..), ConstantDefinition (..))
 import Util ((.:.))
 import Prelude hiding (lookup)
 
@@ -25,12 +25,15 @@ data EvalStrategy m = EvalStrategy
     evalArgs :: [Maybe Integer] -> Maybe [m Integer]
   }
 
-eval :: forall m. EvalStrategy m -> Program -> Integer
-eval strategy (Program defs main) = fix (makeBottom defs) step (\fenv -> semantics main fenv baseEnv)
+eval :: forall m. (Applicative m) => EvalStrategy m -> Program -> Integer
+eval strategy (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics main fenv baseEnv)
   where
     baseEnv :: Environment k v
     baseEnv =
       withDefault $ error "Precondition violated the program referenced an undefined identifier"
+
+    globalEnv :: Env m
+    globalEnv = uncurry (makeEnv baseEnv) $ unzip $ fmap (\(ConstantDefinition id val) -> (id, pure val)) consts
 
     step :: FEnv m -> FEnv m
     step fenv = fmap step' fenv
@@ -57,5 +60,5 @@ eval strategy (Program defs main) = fix (makeBottom defs) step (\fenv -> semanti
         semantics' (Application id args) = do
           args <- evalArgs strategy $ fmap semantics' args
           let (Function argNames _ functional) = lookup fenv id
-          let env' = makeEnv baseEnv argNames args
+          let env' = makeEnv globalEnv argNames args
           functional env'

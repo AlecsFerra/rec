@@ -1,4 +1,4 @@
-module Syntax.Syntax (Expression (..), FunctionDefinition (..), Program (..), FunctionIdentifier (..), VariableIdentifier (..)) where
+module Syntax.Syntax (Expression (..), FunctionDefinition (..), Program (..), FunctionIdentifier (..), VariableIdentifier (..), ConstantDefinition(..)) where
 
 newtype VariableIdentifier = VariableIdentifier String
   deriving (Eq, Show, Ord)
@@ -18,5 +18,8 @@ data Expression
 data FunctionDefinition = FunctionDefinition FunctionIdentifier [VariableIdentifier] Expression
   deriving (Show)
 
-data Program = Program [FunctionDefinition] Expression
+data ConstantDefinition = ConstantDefinition VariableIdentifier Integer
+  deriving (Show)
+
+data Program = Program [FunctionDefinition] [ConstantDefinition] Expression
   deriving (Show)

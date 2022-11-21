@@ -9,7 +9,7 @@ import Control.Monad (void)
 import Data.Foldable (Foldable (..))
 import GHC.Base (Applicative (..))
 import Parsing.Lexer.Token (Token (..))
-import Parsing.Parser.Syntax (Declaration (Declaration), Expression (..), Operator (..), Program (..))
+import Parsing.Parser.Syntax (Constant (Constant), Declaration (Declaration), Expression (..), Operator (..), Program (..))
 import Parsing.ParserCombinator (FromStream (..), pluck, satisfies)
 import qualified Parsing.ParserCombinator as P (Parser (..))
 
@@ -113,8 +113,16 @@ declaration = Declaration <$> name <*> args <* is Equal <*> expression
   where
     args = is OpenParen *> separated Comma name <* is CloseParen
 
+integer :: Parser Integer
+integer = pluck $ \case
+  (Literal s) -> Just s
+  _ -> Nothing
+
+constant :: Parser Constant
+constant = Constant <$> name <* is Equal <*> integer
+
 program :: Parser Program
-program = Program <$> many declaration <*> expression
+program = Program <$> many (fmap Left declaration <|> fmap Right constant) <*> expression
 
 parse :: [Token] -> Either ParsingError Program
 parse t = case P.runParser program t of

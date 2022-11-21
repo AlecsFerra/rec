@@ -37,7 +37,8 @@ prettyCheckError fileName error = printf "Error while checking '%s': %s" fileNam
     pretty (UnknownFunction (FunctionIdentifier id)) = printf "unknown function %s" id
     pretty (WrongArity (FunctionIdentifier id) expected got) = printf "function %s expected %d arguments but got %d" id expected got
     pretty (UnknownVariable (VariableIdentifier id)) = printf "unknown variable %s" id
-    pretty (DuplicateParameter (VariableIdentifier id)) = printf "parameter %s is declared multiple times in the same function definition" id
+    pretty (DuplicateParameter (VariableIdentifier id)) = printf "parameter %s is declared multiple times" id
+    pretty (DuplicateConstant (VariableIdentifier id)) = printf "duplicate constant %s declared" id
 
 data EvaluationMode = Lazy | Strict
 

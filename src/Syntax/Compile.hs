@@ -1,11 +1,15 @@
 module Syntax.Compile (compile) where
 
-import qualified Parsing.Parser.Syntax as P (Declaration (..), Expression (..), Operator (..), Program (Program))
-import qualified Syntax.Syntax as S (Expression (..), FunctionDefinition (FunctionDefinition), FunctionIdentifier (..), Program (Program), VariableIdentifier (..))
+import Data.Either (lefts, rights)
+import qualified Parsing.Parser.Syntax as P (Declaration (..), Expression (..), Operator (..), Program (Program), Constant (..))
+import qualified Syntax.Syntax as S (Expression (..), FunctionDefinition (FunctionDefinition), FunctionIdentifier (..), Program (Program), VariableIdentifier (..), ConstantDefinition (ConstantDefinition))
 
 compile :: P.Program -> S.Program
 compile (P.Program declarations mainExpression) =
-  S.Program (fmap compileDefinition declarations) (compileExpression mainExpression)
+  S.Program
+    (fmap compileDefinition $ lefts $ declarations)
+    (fmap compileConstant $ rights $ declarations)
+    (compileExpression mainExpression)
 
 compileDefinition :: P.Declaration -> S.FunctionDefinition
 compileDefinition (P.Declaration id args expr) =
@@ -42,6 +46,9 @@ compileExpression (P.Conditional guard thenBranch elseBranch) =
     (compileExpression guard)
     (compileExpression thenBranch)
     (compileExpression elseBranch)
+
+compileConstant :: P.Constant -> S.ConstantDefinition
+compileConstant (P.Constant id val) = S.ConstantDefinition (S.VariableIdentifier  id) val
 
 -- >>> compileExpression (P.BinaryOperator P.Subtraction (P.Negation (P.IntegerLiteral 69)) (P.IntegerLiteral 10))
 -- Addition (Multiplication (Literal (-1)) (Literal 69)) (Multiplication (Literal (-1)) (Literal 10))
