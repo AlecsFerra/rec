@@ -8,7 +8,7 @@ import Data.Foldable (Foldable (..))
 import GHC.Base (Applicative (..))
 import Semantics.Environment (Environment, insert, lookup, withDefault)
 import Semantics.FixPoint (fix)
-import Syntax.Syntax (Expression (..), FunctionDefinition (..), FunctionIdentifier (..), Program (..), VariableIdentifier (..), ConstantDefinition (..))
+import Syntax.Syntax (ConstantDefinition (..), Expression (..), FunctionDefinition (..), FunctionIdentifier (..), Program (..), VariableIdentifier (..))
 import Util ((.:.))
 import Prelude hiding (lookup)
 

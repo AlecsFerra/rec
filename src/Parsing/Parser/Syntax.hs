@@ -1,4 +1,4 @@
-module Parsing.Parser.Syntax (Program (..), Expression (..), Operator (..), Declaration (..), Constant(..)) where
+module Parsing.Parser.Syntax (Program (..), Expression (..), Operator (..), Declaration (..), Constant (..)) where
 
 data Operator = Addition | Subtraction | Multiplication
   deriving (Show)
