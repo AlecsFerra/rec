@@ -3,6 +3,7 @@
 
 module Semantics.Semantics (eval, EvalStrategy (..)) where
 
+import Control.Arrow (Arrow (second))
 import Data.Bool (bool)
 import Data.Foldable (Foldable (..))
 import GHC.Base (Applicative (..))
@@ -26,14 +27,16 @@ data EvalStrategy m = EvalStrategy
   }
 
 eval :: forall m. (Applicative m) => EvalStrategy m -> Program -> Integer
-eval strategy (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics main fenv baseEnv)
+eval strategy (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics main fenv globalEnv)
   where
     baseEnv :: Environment k v
     baseEnv =
       withDefault $ error "Precondition violated the program referenced an undefined identifier"
 
     globalEnv :: Env m
-    globalEnv = uncurry (makeEnv baseEnv) $ unzip $ fmap (\(ConstantDefinition id val) -> (id, pure val)) consts
+    globalEnv = uncurry (makeEnv baseEnv) $ unzip $ fmap (second pure . toTuple) consts
+      where
+        toTuple (ConstantDefinition a b) = (a, b)
 
     step :: FEnv m -> FEnv m
     step fenv = fmap step' fenv

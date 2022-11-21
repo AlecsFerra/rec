@@ -4,6 +4,7 @@ import Data.Functor.Identity (Identity (Identity, runIdentity), runIdentity)
 import Semantics.Semantics (EvalStrategy (..))
 import qualified Semantics.Semantics as S (eval)
 import Syntax.Syntax (Program)
+import Util ((<$$>))
 
 eval :: Program -> Integer
 eval = S.eval strategy
@@ -12,5 +13,5 @@ strategy :: EvalStrategy Identity
 strategy =
   EvalStrategy
     { toMaybe = Just . runIdentity,
-      evalArgs = fmap (fmap Identity) . sequence
+      evalArgs = (Identity <$$>) . sequence
     }

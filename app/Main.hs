@@ -31,7 +31,7 @@ prettyParseError fileName error = printf "Error while parsing '%s': %s" fileName
     pretty UnexpectedEOF = "Unexpected end of file"
 
 prettyCheckError :: String -> CheckError -> String
-prettyCheckError fileName error = printf "Error while checking '%s': %s" fileName (pretty error :: String)
+prettyCheckError fileName error = printf @(String -> String -> String) "Error while checking '%s': %s" fileName $ pretty error
   where
     pretty (DuplicateFunctionIdentifier (FunctionIdentifier id)) = printf "function %s is declared multiple times" id
     pretty (UnknownFunction (FunctionIdentifier id)) = printf "unknown function %s" id
