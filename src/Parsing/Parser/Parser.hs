@@ -79,9 +79,7 @@ variable :: Parser Expression
 variable = (Variable <$> name) <|> literal
 
 literal :: Parser Expression
-literal = pluck $ \case
-  (Literal s) -> Just (IntegerLiteral s)
-  _ -> Nothing
+literal = fmap IntegerLiteral integer
 
 expression :: Parser Expression
 expression = parenthesize (if_ <|> additionSubtraction)
