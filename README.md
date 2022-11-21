@@ -8,9 +8,11 @@ The interpreter can perform lazy and strict evaluation of programs.
 
 ## The language
 
-A programs consists of many function declaration:
+A programs consists of many function declaration and constants:
 ```
 myFunction(param1, param2) = param1 + param2
+
+pi = 3
 ```
 
 And a main expression a the bottom:
