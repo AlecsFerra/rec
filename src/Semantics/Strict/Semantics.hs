@@ -1,5 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Semantics.Strict.Semantics (eval) where
 
@@ -9,9 +9,14 @@ import qualified Semantics.Semantics as S (eval)
 import Syntax.Syntax (Program)
 import Util ((<$$>))
 
-instance EvalStrategy Identity where
-  toMaybe = Just . runIdentity
-  evalArgs = (Identity <$$>) . sequence
+newtype Id a = Id
+  { runId :: Identity a
+  }
+  deriving (Functor, Applicative)
+
+instance EvalStrategy Id where
+  toMaybe = Just . runIdentity . runId
+  evalArgs = ((Id . Identity) <$$>) . sequence
 
 eval :: Program -> Integer
-eval = S.eval @Identity
+eval = S.eval @Id

@@ -1,14 +1,20 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Semantics.Lazy.Semantics (eval) where
 
 import Semantics.Semantics (EvalStrategy (..))
 import qualified Semantics.Semantics as S (eval)
 import Syntax.Syntax (Program)
 
-instance EvalStrategy Maybe where
-  toMaybe = id
-  evalArgs = Just
+newtype May a = May
+  { runMay :: Maybe a
+  }
+  deriving (Functor, Applicative)
+
+instance EvalStrategy May where
+  toMaybe = runMay
+  evalArgs = Just . fmap May
 
 eval :: Program -> Integer
-eval = S.eval @Maybe
+eval = S.eval @May
