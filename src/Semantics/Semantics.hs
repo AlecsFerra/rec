@@ -1,6 +1,6 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Semantics.Semantics (eval, EvalStrategy (..)) where
 
@@ -26,8 +26,7 @@ class (Applicative m) => EvalStrategy m where
   toMaybe :: m a -> Maybe a
   evalArgs :: [Maybe Integer] -> Maybe [m Integer]
 
-
-eval :: forall m . (EvalStrategy m) => Program -> Integer
+eval :: forall m. (EvalStrategy m) => Program -> Integer
 eval (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics main fenv globalEnv)
   where
     baseEnv :: Environment k v
