@@ -27,7 +27,7 @@ class (Applicative m) => EvalStrategy m where
   evalArgs :: [Maybe Integer] -> Maybe [m Integer]
 
 eval :: forall m. (EvalStrategy m) => Program -> Integer
-eval (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics main fenv globalEnv)
+eval (Program defs consts main) = fix (makeBottom defs) step $ \fenv -> semantics main fenv globalEnv
   where
     baseEnv :: Environment k v
     baseEnv =
@@ -41,12 +41,12 @@ eval (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics
     step :: FEnv m -> FEnv m
     step fenv = fmap step' fenv
       where
-        step' (Function args body _) = Function args body (semantics body fenv)
+        step' (Function args body _) = Function args body $ semantics body fenv
 
     makeBottom :: [FunctionDefinition] -> FEnv m
     makeBottom = foldl' (uncurry . insert) baseEnv . fmap makeEmpty
       where
-        makeEmpty (FunctionDefinition id args body) = (id, Function args body (const Nothing))
+        makeEmpty (FunctionDefinition id args body) = (id, Function args body $ const Nothing)
 
     makeEnv :: Env m -> [VariableIdentifier] -> [m Integer] -> Env m
     makeEnv base = foldl' (uncurry . insert) base .:. zip
@@ -59,7 +59,7 @@ eval (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics
         semantics' (Addition l r) = liftA2 (+) (semantics' l) (semantics' r)
         semantics' (Multiplication l r) = liftA2 (*) (semantics' l) (semantics' r)
         semantics' (Conditional guard thenClause elseClause) =
-          semantics' guard >>= (bool (semantics' thenClause) (semantics' elseClause) . (/= 0))
+          semantics' guard >>= bool (semantics' thenClause) (semantics' elseClause) . (/= 0)
         semantics' (Application id args) = do
           args <- evalArgs $ fmap semantics' args
           let (Function argNames _ functional) = lookup fenv id
