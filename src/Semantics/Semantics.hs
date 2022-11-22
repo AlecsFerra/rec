@@ -1,5 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Semantics.Semantics (eval, EvalStrategy (..)) where
 
@@ -21,13 +22,13 @@ type FEnv m = Environment FunctionIdentifier (Function m)
 
 type Env m = Environment VariableIdentifier (m Integer)
 
-data EvalStrategy m = EvalStrategy
-  { toMaybe :: forall a. m a -> Maybe a,
-    evalArgs :: [Maybe Integer] -> Maybe [m Integer]
-  }
+class (Applicative m) => EvalStrategy m where
+  toMaybe :: m a -> Maybe a
+  evalArgs :: [Maybe Integer] -> Maybe [m Integer]
 
-eval :: forall m. (Applicative m) => EvalStrategy m -> Program -> Integer
-eval strategy (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics main fenv globalEnv)
+
+eval :: forall m . (EvalStrategy m) => Program -> Integer
+eval (Program defs consts main) = fix (makeBottom defs) step (\fenv -> semantics main fenv globalEnv)
   where
     baseEnv :: Environment k v
     baseEnv =
@@ -54,14 +55,14 @@ eval strategy (Program defs consts main) = fix (makeBottom defs) step (\fenv -> 
     semantics :: Expression -> FEnv m -> Env m -> Maybe Integer
     semantics e fenv env = semantics' e
       where
-        semantics' (Variable id) = toMaybe strategy $ lookup env id
+        semantics' (Variable id) = toMaybe $ lookup env id
         semantics' (Literal n) = Just n
         semantics' (Addition l r) = liftA2 (+) (semantics' l) (semantics' r)
         semantics' (Multiplication l r) = liftA2 (*) (semantics' l) (semantics' r)
         semantics' (Conditional guard thenClause elseClause) =
           semantics' guard >>= (bool (semantics' thenClause) (semantics' elseClause) . (/= 0))
         semantics' (Application id args) = do
-          args <- evalArgs strategy $ fmap semantics' args
+          args <- evalArgs $ fmap semantics' args
           let (Function argNames _ functional) = lookup fenv id
           let env' = makeEnv globalEnv argNames args
           functional env'

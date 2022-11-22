@@ -1,15 +1,14 @@
+{-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module Semantics.Lazy.Semantics (eval) where
 
 import Semantics.Semantics (EvalStrategy (..))
 import qualified Semantics.Semantics as S (eval)
 import Syntax.Syntax (Program)
 
-eval :: Program -> Integer
-eval = S.eval strategy
+instance EvalStrategy Maybe where
+  toMaybe = id
+  evalArgs = Just
 
-strategy :: EvalStrategy Maybe
-strategy =
-  EvalStrategy
-    { toMaybe = id,
-      evalArgs = Just
-    }
+eval :: Program -> Integer
+eval = S.eval @Maybe
