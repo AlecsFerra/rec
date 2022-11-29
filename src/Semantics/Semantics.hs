@@ -22,12 +22,14 @@ type FEnv m = Environment FunctionIdentifier (Function m)
 
 type Env m = Environment VariableIdentifier (m Integer)
 
-class (Applicative m) => EvalStrategy m where
-  toMaybe :: m a -> Maybe a
-  evalArgs :: [Maybe Integer] -> Maybe [m Integer]
+data EvalStrategy m = EvalStrategy
+  { toMaybe :: forall a. m a -> Maybe a,
+    evalArgs :: [Maybe Integer] -> Maybe [m Integer],
+    pure :: forall a. a -> m a
+  }
 
-eval :: forall m. (EvalStrategy m) => Program -> Integer
-eval (Program defs consts main) = fix (makeBottom defs) step $ \fenv -> semantics main fenv globalEnv
+eval :: forall m. EvalStrategy m -> Program -> Integer
+eval (EvalStrategy toMaybe evalArgs pure) (Program defs consts main) = fix (makeBottom defs) step $ \fenv -> semantics main fenv globalEnv
   where
     baseEnv :: Environment k v
     baseEnv =
