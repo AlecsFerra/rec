@@ -1,6 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeApplications #-}
-
 module Semantics.Strict.Semantics (eval) where
 
 import Data.Functor.Identity (Identity (Identity, runIdentity), runIdentity)
