@@ -43,23 +43,23 @@ baseEnv =
     error
       "Precondition violated the program referenced an undefined identifier"
 
--- | Apply to a function the lfp on the cpo starting from the bottom
+
 -- >>> applyFix (\a -> if a == 11 then Just a else Nothing) 0 (+ 1)
 -- 11
-applyFix ::
-  -- | The function on witch the lfp gets applied
-  (a -> Maybe b) ->
+fix ::
   -- | The bottom element
   a ->
   -- | A continuos function on the cpo *a*
   (a -> a) ->
-  -- | The result of applying the lfp to the function
-  b
-applyFix g bottom f = head $ mapMaybe g sequence
+  -- | The lfp
+  ((a -> Maybe b) -> b)
+fix bottom f = lub sequence
   where
     -- Construct the function application sequence
     -- f^0 bottom, f^1 bottom, f^2 bottom, ...
     sequence = iterate f bottom
+    -- Compute the lub
+    lub fs g = head $ mapMaybe g fs
 
 -- | The evaluation strategy when working on an environment with values
 -- wrapped by *m*
@@ -77,7 +77,7 @@ data EvalStrategy m = EvalStrategy
 eval :: forall m. EvalStrategy m -> Program -> Integer
 eval (EvalStrategy toMaybe evalArgs pure) (Program defs consts main) =
   -- Find the fix point of F starting from the bottom environment
-  applyFix (\fenv -> semantics main fenv globalEnv) (makeBottom defs) step
+  fix (makeBottom defs) step (\fenv -> semantics main fenv globalEnv)
   where
     -- | The global variable environment witch is filled with the constants
     -- defined in the program

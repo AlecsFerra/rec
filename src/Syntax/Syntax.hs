@@ -7,12 +7,12 @@ newtype FunctionIdentifier = FunctionIdentifier String
   deriving (Eq, Show, Ord)
 
 data Expression
-  = Variable VariableIdentifier
-  | Literal Integer
-  | Application FunctionIdentifier [Expression]
-  | Conditional Expression Expression Expression
+  = Literal Integer
+  | Variable VariableIdentifier
   | Addition Expression Expression
   | Multiplication Expression Expression
+  | Conditional Expression Expression Expression
+  | Application FunctionIdentifier [Expression]
   deriving (Show)
 
 data FunctionDefinition = FunctionDefinition FunctionIdentifier [VariableIdentifier] Expression
